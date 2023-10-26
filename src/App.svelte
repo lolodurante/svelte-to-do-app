@@ -1,4 +1,6 @@
-<script lang="ts">  
+<script lang="ts">
+  import { onMount } from "svelte";
+
   let todos = [{
     id: 1,
     text: 'Learn Svelte'
@@ -11,16 +13,37 @@
     }]
     inputValue = ''
   }
-  const handleDeleteItem = (id) => {
+  const saveRecommendationValue = () => {
+    todos = [...todos, {
+      id: todos.length + 1,
+      text: recommendation
+    }]
+    handleRefetch()
+    
+  }
+  const handleDeleteItem = (id: number) => {
     todos = todos.filter(todo => todo.id !== id)
     todos = todos
   }
+
+  const handleRefetch = async () => {
+    await fetch("https://www.boredapi.com/api/activity")
+      .then(response => response.json())
+      .then(data => recommendation = data.activity)
+  }
+
+  let recommendation: string; 
+  onMount( async () => {
+    const response = await fetch("https://www.boredapi.com/api/activity")
+    const data = await response.json()
+    recommendation = data.activity
+  })
 </script>
 
 <main>
   <div>
     <input type="text" bind:value={inputValue} placeholder="Add item to the to do">
-    <button on:click={saveInputValue}>Submit</button>
+    <button class="saveToDo" on:click={saveInputValue}>Submit</button>
   </div>
   <ul>
     {#each todos as todo}
@@ -31,6 +54,12 @@
       
     {/each}
   </ul>
+  <b>Need help thinking new to do tasks? Here's one:</b>
+  <br/> 
+  { recommendation ? recommendation : "loading.." }
+  { #if recommendation }
+    <button class="saveToDo" on:click={saveRecommendationValue}>Save To Do</button>
+  {/if}
 </main>
 
 <style>
@@ -55,5 +84,8 @@
   }
   .text-item {
     margin-right: 10px;
+  }
+  .saveToDo {
+    margin-top: 10px;
   }
 </style>
